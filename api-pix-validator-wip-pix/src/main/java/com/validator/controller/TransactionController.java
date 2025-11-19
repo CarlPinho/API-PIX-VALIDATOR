@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/transactions")
@@ -75,5 +76,24 @@ public class TransactionController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<TransactionResponse>> findByStatus(@PathVariable String status) {
         return ResponseEntity.ok(transactionService.findByStatus(status));
+    }
+
+
+    /**
+     * Endpoint para um ANALISTA aprovar uma transação pendente.
+     */
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<TransactionResponse> approveTransaction(@PathVariable Long id) {
+        TransactionResponse response = transactionService.approveTransaction(id);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Endpoint para um ANALISTA rejeitar uma transação pendente.
+     */
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<TransactionResponse> rejectTransaction(@PathVariable Long id) {
+        TransactionResponse response = transactionService.rejectTransaction(id);
+        return ResponseEntity.ok(response);
     }
 }

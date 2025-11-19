@@ -34,5 +34,17 @@ public class BlackListRepositoryImpl implements BlackListRepository {
     public void save(BlackList blackList) {
         Optional.ofNullable(blackList.getId()).ifPresentOrElse(entityManager::merge, () -> entityManager.persist(blackList));
     }
+
+    @Override
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public Optional<BlackList> findByUserId(Long userId) {
+        return entityManager.createQuery(
+                    // Esta query busca na entidade BlackList onde o 'user' (que é um objeto) 
+                    // tenha um 'id' igual ao parâmetro
+                    "SELECT b FROM BlackList b WHERE b.user.id = :userId", BlackList.class)
+            .setParameter("userId", userId)
+            .getResultStream()
+            .findFirst();
+}
 }
 

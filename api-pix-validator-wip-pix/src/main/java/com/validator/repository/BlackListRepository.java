@@ -13,4 +13,6 @@ public interface BlackListRepository {
     Optional<User> getUser(Long id);
 
     void save(BlackList blackList);
+
+    Optional<BlackList> findByUserId(Long userId);
 }

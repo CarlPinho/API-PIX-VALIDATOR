@@ -117,28 +117,35 @@ public class TransactionValidator {
     }
 
     public void validateOutOfAverageValue(Transaction transaction, List<Transaction> lastTransactions) {
-        if (lastTransactions == null || lastTransactions.isEmpty() || lastTransactions.size() < 5) {
-            return;
-        }
-
-        double average = lastTransactions.stream()
-                .mapToDouble(Transaction::getValue)
-                .average()
-                .orElse(0.0);
-
-        double toleranceFactor = 4.0;
-        double upperLimit = average * toleranceFactor;
-        double lowerLimit = average / toleranceFactor;
-
-        if (transaction.getValue() > upperLimit || transaction.getValue() < lowerLimit) {
-            transaction.setStatus(TransactionStatus.FAILED);
-            transaction.setFraudReason(FraudReason.OUT_OF_AVERAGE_VALUE);
-        }
+    if (lastTransactions == null || lastTransactions.isEmpty() || lastTransactions.size() < 5) {
+        return;
     }
+
+    double average = lastTransactions.stream()
+            .mapToDouble(Transaction::getValue)
+            .average()
+            .orElse(0.0);
+
+    double toleranceFactor = 4.0;
+    double upperLimit = average * toleranceFactor;
+    double lowerLimit = average / toleranceFactor;
+
+    if (transaction.getValue() > upperLimit || transaction.getValue() < lowerLimit) {
+        transaction.setStatus(TransactionStatus.FAILED);
+        transaction.setFraudReason(FraudReason.OUT_OF_AVERAGE_VALUE);
+
+        // ADICIONE ESTA LINHA (A SUGESTÃO)
+        addUserToBlackList(transaction.getReceiver());
+    }
+}
 
     public boolean isBlacklisted(User user) {
-        return Objects.isNull(user.getId()) || blackListRepository.getUser(user.getId()).isPresent();
+    if (Objects.isNull(user.getId())) {
+        return false; // Não podemos checar um usuário que nem existe no banco
     }
+    
+    return blackListRepository.findByUserId(user.getId()).isPresent();
+}
 
     public void addUserToBlackList(User user) {
         blackListRepository.save(new BlackList(null, user, LocalDateTime.now()));

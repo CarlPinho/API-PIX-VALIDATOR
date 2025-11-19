@@ -3,6 +3,8 @@ package com.validator.service;
 import com.validator.controller.requests.TransactionRequest;
 import com.validator.controller.responses.TransactionResponse;
 import com.validator.model.Transaction;
+import com.validator.model.enums.FraudReason;
+import com.validator.model.enums.TransactionStatus;
 import com.validator.repository.TransactionRepositoryImpl;
 import com.validator.service.validators.TransactionValidator;
 import lombok.RequiredArgsConstructor;
@@ -80,6 +82,40 @@ public class TransactionService {
         return transactionRepository.findByStatus(status).stream()
                 .map(Transaction::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Aprova uma transação (chamado pelo analista).
+     */
+    public TransactionResponse approveTransaction(Long id) {
+        Transaction tx = transactionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + id));
+
+        // Define o status como SUCESSO e limpa a razão da fraude
+        tx.setStatus(TransactionStatus.SUCCESS);
+        tx.setFraudReason(null);
+        tx.setLastUpdatedDate(java.time.LocalDateTime.now());
+
+        Transaction saved = transactionRepository.save(tx);
+        log.info("Transaction id={} approved by analyst", id);
+        return saved.toResponse();
+    }
+
+    /**
+     * Rejeita uma transação (chamado pelo analista).
+     */
+    public TransactionResponse rejectTransaction(Long id) {
+        Transaction tx = transactionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + id));
+
+        // Define o status como FALHA; nenhuma razão específica definida (poderia ser um enum adicional)
+        tx.setStatus(TransactionStatus.FAILED);
+        tx.setFraudReason(null); // no specific FraudReason constant available
+        tx.setLastUpdatedDate(java.time.LocalDateTime.now());
+
+        Transaction saved = transactionRepository.save(tx);
+        log.info("Transaction id={} rejected by analyst", id);
+        return saved.toResponse();
     }
 
 }
